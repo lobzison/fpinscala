@@ -36,8 +36,10 @@ trait Parsers3[ParseError, Parser[+_]] { self =>
   implicit def operators[A](p: Parser[A]):ParserOps[A] = ParserOps[A](p)
   implicit def asStringParser[A](a: A)(implicit f: A => Parser[String]):ParserOps[String] = ParserOps(f(a))
   def listOfN[A](n: Int, p: Parser[A]):Parser[List[A]]
-  def many[A](P: Parser[A]):Parser[List[A]]
+  def many[A](p: Parser[A]):Parser[List[A]]
+  def many1[A](p: Parser[A]): Parser[List[A]]
   def succeed[A](a: A): Parser[A] = string("").map(_ => a)
+  def slice[A](p: Parser[A]): Parser[String]
 
   def map[A, B](p: Parser[A])(f: A => B): Parser[B]
   def flatMap[A, B](p: Parser[A])(f: A => Parser[B]):Parser[B]
@@ -49,6 +51,8 @@ trait Parsers3[ParseError, Parser[+_]] { self =>
     def map[B](f: A => B): Parser[B] = self.map(p)(f)
     def flatMap[B](f: A => Parser[B]):Parser[B] = self.flatMap(p)(f)
     def many :Parser[List[A]] = self.many(p)
+    def slice: Parser[String] = self.slice(p)
+
   }
 
   object Laws {
@@ -67,8 +71,8 @@ trait Parsers3[ParseError, Parser[+_]] { self =>
 
   }
 
-  val numA:Parser[Int] = char('a').many.map(_.size)
-  def zeroOrMore(c: Char) = char(c).many.map(_.size)
+  val numA:Parser[Int] = char('a').many.slice.map(_.length)
+  def zeroOrMore(c: Char) = char(c).many.slice.map(_.length)
 }
 
 case class ZeroOrMore[Int](c: Char) {
