@@ -87,6 +87,20 @@ trait Parsers3[ParseError, Parser[+_]] { self =>
   def zeroOrMore(c: Char) = char(c).many.slice.map(_.length)
   def oneFollowedBy(c: Char, c2: Char) = zeroOrMore(c) ** char(c2).many1.slice.map(_.length)
   def nFollowedByNChar(c: Char):Parser[List[Char]] = "0-9".r.flatMap(x => char(c).listOfN(x.toInt))
+
+  def jsonParser[Err, Parser[+_]](P: Parsers3[Err, Parser]): Parser[JSON] = {
+    import P._
+    val spaces = char(' ').many.slice
+  }
+}
+
+trait JSON
+object JSON {
+  case object JNull extends JSON
+  case class JNumber(get: Double) extends JSON
+  case class JBool(get: Boolean) extends JSON
+  case class JArray(get: IndexedSeq[JSON]) extends JSON
+  case class JObject(get: Map[String, JSON]) extends JSON
 }
 
 case class ZeroOrMore[Int](c: Char) {
