@@ -1,5 +1,7 @@
 package fpinscala.parsing
 
+
+
 import language.higherKinds
 import scala.util.matching.Regex
 
@@ -88,16 +90,14 @@ trait Parsers3[ParseError, Parser[+_]] { self =>
   def oneFollowedBy(c: Char, c2: Char) = zeroOrMore(c) ** char(c2).many1.slice.map(_.length)
   def nFollowedByNChar(c: Char):Parser[List[Char]] = "0-9".r.flatMap(x => char(c).listOfN(x.toInt))
 
-  def jsonParser[Err, Parser[+_]](P: Parsers3[Err, Parser]): Parser[JSON] = {
-    import P._
-    val spaces = char(' ').many.slice
-  }
+
 }
 
 trait JSON
 object JSON {
   case object JNull extends JSON
   case class JNumber(get: Double) extends JSON
+  case class JString(get: String) extends JSON
   case class JBool(get: Boolean) extends JSON
   case class JArray(get: IndexedSeq[JSON]) extends JSON
   case class JObject(get: Map[String, JSON]) extends JSON
@@ -107,7 +107,20 @@ case class ZeroOrMore[Int](c: Char) {
   def parse(s: String): Int = ???
 }
 
+object JsonParser {
+  def jsonParser[Err, Parser[+_]](P: Parsers3[Err, Parser]): Parser[JSON] = {
+    import P._
+    import fpinscala.parsing.JSON._
+    val spaces = char(' ').many.slice
 
+    def jNull = string("null").map(_ => JNull)
+    def jNumber = "/[-.0-9]+/".r.map(x => JNumber(x.toDouble))
+    def jBool= (string("true") or string("false")).map(x => JBool(x.toBoolean))
+    def jString = (string("\"") ** "/.+?(?=\")/".r ** string("\"")).map(x => JString(x._1._2))
+    def jArray = string("[") ** string("]")
+
+  }
+}
 
 case class Location(input: String, offset: Int = 0) {
 
