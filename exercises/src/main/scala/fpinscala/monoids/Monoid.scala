@@ -84,11 +84,30 @@ object Monoid {
   }
 
 
-  def foldMapV[A, B](as: IndexedSeq[A], m: Monoid[B])(f: A => B): B =
-    ???
+  def foldMapV[A, B](as: IndexedSeq[A], m: Monoid[B])(f: A => B): B = {
+    if (as.isEmpty)
+      m.zero
+    else if (as.length == 1)
+      f(as(0))
+    else {
+      val (l, r) = as.splitAt(as.length / 2)
+      m.op(foldMapV(l, m)(f), foldMapV(r, m)(f))
+    }
+  }
 
-  def ordered(ints: IndexedSeq[Int]): Boolean =
-    ???
+  def ordered(ints: IndexedSeq[Int]): Boolean = {
+    val m = new Monoid[Option[(Int, Int, Boolean)]] {
+      def op(a1: Option[(Int, Int, Boolean)], a2: Option[(Int, Int, Boolean)]) = (a1, a2) match {
+        case (Some((x1, y1, o1)), Some((x2, y2, o2))) =>
+          Some((x1 min x2, y1 max y2, o1 && o2 && y1 <= x2))
+        case (x, None) => x
+        case (None, x) => x
+      }
+      def zero = None
+    }
+    foldMapV(ints, m)(i => Some(i, i, true)).forall(_._3)
+  }
+
 
   sealed trait WC
   case class Stub(chars: String) extends WC
