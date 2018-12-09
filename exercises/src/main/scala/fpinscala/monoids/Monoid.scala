@@ -157,11 +157,13 @@ trait Foldable[F[_]] {
 
 object ListFoldable extends Foldable[List] {
   override def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B) =
-    ???
-  override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B) =
-    ???
+    foldLeft(as.reverse)(z)((b,a) => f(a,b))
+  override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B) = {as match {
+    case Nil => z
+    case h::t => f(foldLeft(t)(z)(f), h)
+  }}
   override def foldMap[A, B](as: List[A])(f: A => B)(mb: Monoid[B]): B =
-    ???
+    foldLeft(as)(mb.zero)((end, x) => mb.op(f(x), end))
 }
 
 object IndexedSeqFoldable extends Foldable[IndexedSeq] {
