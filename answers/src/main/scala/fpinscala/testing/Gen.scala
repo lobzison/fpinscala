@@ -6,7 +6,8 @@ import fpinscala.parallelism._
 import fpinscala.parallelism.Par.Par
 import Gen._
 import Prop._
-import java.util.concurrent.{Executors,ExecutorService}
+import java.util.concurrent.{ExecutorService, Executors}
+
 import language.postfixOps
 import language.implicitConversions
 
